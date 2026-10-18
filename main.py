@@ -1,4 +1,3 @@
-
 import os
 from contextlib import asynccontextmanager
 
@@ -6,17 +5,22 @@ import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+
 redis_client = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global redis_client
+
     redis_client = redis.from_url(
         REDIS_URL,
         decode_responses=True,
     )
+
     try:
+        # Verify Redis is reachable during startup
+        await redis_client.ping()
         yield
     finally:
         await redis_client.aclose()
